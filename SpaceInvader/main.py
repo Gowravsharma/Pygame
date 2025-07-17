@@ -22,31 +22,67 @@ playerX_change = 0
 playerY_change = 0
 
 # Invader
-invaderImg = pygame.image.load('invader64.png')
-invaderX = random.randint(0,800)
-invaderY = random.randint(50, 200)
-invaderX_change = 0.2
-invaderY_change = 40
+invaderImg = []
+invaderX = []
+invaderY = []
+invaderX_change = []
+invaderY_change = []
+num_invader = 6
+
+for i in range(num_invader):
+  invaderImg.append(pygame.image.load('invader64.png'))
+  invaderX.append(random.randint(0,800)) 
+  invaderY.append(random.randint(50, 300))
+  invaderX_change.append(0.2)
+  invaderY_change.append(40)
 
 # Bullet
-bulletImg = pygame.image.load('bullet.png')
-bullet_resized = pygame.transform.scale(bulletImg, (24,24))
+bulletImg = pygame.image.load('bullet24.png')
+#bullet_resized = pygame.transform.scale(bulletImg, (24,24))
 bulletX = 0
 bulletY = 480
 bulletX_change = 0
 bulletY_change = 1
 bullet_state = 'ready' # Ready - you can't seee the bullet on the screen
 
+
+# score
+score_val = 0
+font = pygame.font.Font('freesansbold.ttf',32)
+
+textX = 10
+textY = 10
+
+# Game Over Test
+over_font = pygame.font.Font('freesansbold.ttf', 64)
+
+def show_score(x,y):
+  score = font.render('Score : ' + str(score_val), True, (255,255,255))
+  screen.blit(score, (x,y))
+
+def game_over_text():
+  over_text = over_font.render('Game Over', True, (255, 255, 255))
+  screen.blit(over_text, (200, 250))
+
 def player(x,y):
   screen.blit(playerImg, (x, y))
 
-def invader(x,y):
-  screen.blit(invaderImg, (x, y))
+def invader(x,y, i):
+  screen.blit(invaderImg[i], (x, y))
 
 def fire_bullet(x,y):
   global bullet_state
   bullet_state = 'fire'
-  screen.blit(bullet_resized, (x+20, y+10))
+  screen.blit(bulletImg, (x+20, y))
+
+def isCollision(enemyX, enemyY,bulletX, bulletY):
+  # Using Eucledian distance
+  distance = ((enemyX - bulletX)**2 + (enemyY-bulletY)**2)**(0.5)
+  if distance < 27:
+    return True
+  else:
+    return False
+
 
 # Game Loop
 runnning = True
@@ -57,32 +93,34 @@ while runnning:
 
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
+      print('Final score is: ', score_val)
       print('Quitting')
       runnning = False
     # if Keystroke is pressed check is it -> or <-
     if event.type == pygame.KEYDOWN:
-      print('Key is pressed')
+      #print('Key is pressed')
       if event.key == pygame.K_LEFT:
-        print('Left arrow Key is pressed')
+        #print('Left arrow Key is pressed')
         playerX_change = -0.25
       if event.key == pygame.K_RIGHT:
-        print('Right arrow Key is pressed')
+        #print('Right arrow Key is pressed')
         playerX_change = 0.25
       if event.key == pygame.K_UP:
-        print('UP arrow Key is pressed')
+        #print('UP arrow Key is pressed')
         playerY_change = -0.25
       if event.key == pygame.K_DOWN:
-        print('down arrow Key is pressed')
+        #print('down arrow Key is pressed')
         playerY_change = 0.25
       if event.key == pygame.K_SPACE:
         if bullet_state == 'ready':
-          print('Bullet appears')
+          #print('Bullet appears')
           bulletX = playerX
+          bulletY = playerY #-----------------
           fire_bullet(bulletX, bulletY)
 
     if event.type == pygame.KEYUP:
       if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT or event.key == pygame.K_UP or event.key == pygame.K_DOWN:
-        print('keystroke has been Released')
+        #print('keystroke has been Released')
         playerX_change = 0
         #playerY_change = 0
   
@@ -95,16 +133,35 @@ while runnning:
   elif playerX >= 736:
     playerX = 736
   
-  #invaderX_changed = random.choice([0.3,-0.3])
-  invaderX += invaderX_change
+  # invader Movement
+  for i in range(num_invader):
 
-  if invaderX <= 0:
-    invaderX_change = 0.1
-    invaderY += invaderY_change
-  elif invaderX >= 768:
-    invaderX_change = -0.1
-    invaderY += invaderY_change
-  
+    # Game Over
+    if invaderY[i] > 400:
+      for j in range(num_invader):
+        invaderY[j] = 2000
+      game_over_text()
+      break
+
+
+    invaderX[i] += invaderX_change[i]
+    if invaderX[i] <= 0:
+      invaderX_change[i] = 0.2
+      invaderY[i] += invaderY_change[i]
+    elif invaderX[i] >= 768:
+      invaderX_change[i] = -0.2
+      invaderY[i] += invaderY_change[i]
+    
+    # Collision
+    collision = isCollision(invaderX[i], invaderY[i], bulletX, bulletY)
+    if collision:
+      #print('collision Occured')
+      bulletY = 480
+      bullet_state = 'ready'
+      score_val += 1
+      invaderX[i] = random.randint(0,736)
+      invaderY[i] = random.randint(50, 150)
+    invader(invaderX[i], invaderY[i], i)
   # Bullet Movement
   if bulletY <= 0:
     bulletY = 480
@@ -112,7 +169,11 @@ while runnning:
   if bullet_state == 'fire':
     fire_bullet(bulletX, bulletY)
     bulletY -= bulletY_change
-
+  
+  
+  # Game end Line
+  pygame.draw.line(screen, (255,0,0),(0,422,),(800, 422), 5)
+  pygame.draw.line(screen, (255,255,0),(0,382,),(800, 382), 2)
   player(playerX, playerY)
-  invader(invaderX, invaderY)
+  show_score(textX, textY)
   pygame.display.update()

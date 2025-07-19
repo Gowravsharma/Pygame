@@ -34,9 +34,16 @@ num_invader = 6
 
 for i in range(num_invader):
     invaderImg.append(pygame.image.load('invader64.png'))
-    invaderX.append(random.randint(0, 800))
-    invaderY.append(random.randint(10, 200))
-    invaderX_change.append(200)  # pixels per second
+    x_spawn = random.randint(0,736)
+    invaderX.append(x_spawn)
+    invaderY.append(random.randint(20, 300))
+
+    if x_spawn <= 50:
+        invaderX_change.append(abs(150))
+    if x_spawn <= 686:
+        invaderX_change.append(-abs(150))
+    else:
+      invaderX_change.append(random.choice([-150, 150])) # pixels per second
     invaderY_change.append(30)
 
 # Bullet
@@ -80,6 +87,7 @@ def isCollision(enemyX, enemyY, bulletX, bulletY):
 running = True
 while running:
     dt = clock.tick(60) / 1000  # Delta time in seconds
+    fps = int(clock.get_fps())
 
     screen.fill((0, 0, 0))
     screen.blit(background, (0, 0))
@@ -142,6 +150,9 @@ while running:
     # Game visuals
     pygame.draw.line(screen, (255, 0, 0), (0, 422), (800, 422), 5)
     pygame.draw.line(screen, (255, 255, 0), (0, 382), (800, 382), 2)
+
+    fps_text = font.render(f"FPS: {fps}", True, (255,255,0))
+    screen.blit(fps_text, (680,10))
     player(playerX, playerY)
     show_score(textX, textY)
     pygame.display.update()

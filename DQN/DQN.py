@@ -153,7 +153,7 @@ class DQN:
         batch = self.replay_buffer.sample(self.batch_size)
 
         batch_loss = 0
-        best_score
+        best_score = 0
         for state, action, reward, next_state, done in batch:
           state_tensor = torch.tensor(state, dtype = torch.float32)
           next_state_tensor = torch.tensor(next_state, dtype = torch.float32)
@@ -176,11 +176,12 @@ class DQN:
 
           if episode % self.target_update_freq == 0:
             self.Q_target.load_state_dict(self.Q.state_dict())
+          self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+
           if score_val > best_score:
             best_score = score_val
             self.save_model(episode, optimizer)
-          self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
-        print(f"[Episode {episode}] Score: {score_val} | Loss: {batch_loss:.3f}")
+        print(f"Episode {episode} Score: {score_val} | Loss: {batch_loss:.3f}")
     
 
 if __name__ == '__main__':

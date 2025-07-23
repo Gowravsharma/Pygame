@@ -23,22 +23,15 @@ class weighted_MSE(nn.Module):
   #        return mse * weight
   #    else:
   #       return torch.mean((q_pred - q_true) ** 2)
-  def forward(self, q_true, q_pred, episode_len, score):
-    if self.normalize:
-        eps = 1e-6
-        episode_len = torch.tensor(episode_len, dtype=torch.float32)
-        score = torch.tensor(score, dtype=torch.float32)
+  def forward(self, q_true, q_pred, episode_len=None, score=None):
+      # Ensure q_pred and q_true are tensors
+      if not torch.is_tensor(q_pred):
+          q_pred = torch.tensor(q_pred, dtype=torch.float32)
+      if not torch.is_tensor(q_true):
+          q_true = torch.tensor(q_true, dtype=torch.float32)
 
-        score = torch.clamp(score, min=1.0)
-        log_len = torch.log(episode_len + 1.0)
+      return F.mse_loss(q_pred, q_true)
 
-        # Invert score to get high penalty for low scores
-        # But also adjust for episode_len / score ratio
-        weight = (log_len / score) + (1 / score)
 
-        mse = torch.mean((q_pred - q_true) ** 2)
-        return mse * weight
-    else:
-        return torch.mean((q_pred - q_true) ** 2)
 
 

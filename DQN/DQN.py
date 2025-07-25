@@ -10,15 +10,15 @@ from loss import weighted_MSE
 import random 
 from collections import deque
 
-LR = 1e-3
+LR = 1e-4
 BATCH_SIZE = 64
 GAMMA = 0.7
 NUM_ACTIONS = 4
 HIDDEN_NEURONS = 128
 NUM_EPISODES = 10000
-INPUT_DIM = 7   
-EPSILON = 0.1
-EPSILON_DECAY = 0.995
+INPUT_DIM = 11   
+EPSILON = 0.07
+EPSILON_DECAY = 0.999
 ACTIONS = [0,1,2,3] # 0 -> stay, 1 -> left, 2 -> right, 3 -> shoot
 GAME = game.SpaceInvaderGame()
 
@@ -38,8 +38,8 @@ class qnn(nn.Module):
     super(qnn, self).__init__()
 
     self.input_layer = nn.Linear(input_dim, hidden_neurons)
-    self.linear1 = nn.Linear(hidden_neurons, 64)
-    self.linear2 = nn.Linear(64, num_actions)
+    self.linear1 = nn.Linear(hidden_neurons, hidden_neurons)
+    self.linear2 = nn.Linear(hidden_neurons, num_actions)
     self.ReLU = nn.ReLU()
     self.sigmoid = nn.Sigmoid()
 
@@ -66,8 +66,8 @@ class DQN:
     self.epsilon = self.epsilon_start
     self.gamma = gamma
   
-  def epsilon_greedy_action(self, state ,epsilon = EPSILON):
-    if np.random.rand() < epsilon: # Go for Exploration
+  def epsilon_greedy_action(self, state):
+    if np.random.rand() < self.epsilon_start: # Go for Exploration
       return np.random.choice(ACTIONS)
     else: # go for exploitation
       state = torch.tensor(state)
@@ -115,7 +115,7 @@ class DQN:
           pygame.quit()
           exit()
         
-      action = self.epsilon_greedy_action(state, epsilon=self.epsilon)
+      action = self.epsilon_greedy_action(state)
       next_state, reward, done, score = GAME.step(action)
       self.replay_buffer.push(state, action, reward, next_state, done)
     
@@ -176,12 +176,12 @@ class DQN:
 
           if episode % self.target_update_freq == 0:
             self.Q_target.load_state_dict(self.Q.state_dict())
-          self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
           if score_val > best_score:
             best_score = score_val
             self.save_model(episode, optimizer)
-        print(f"Episode {episode} Score: {score_val} | Loss: {batch_loss:.3f}")
+        self.epsilon_start  = max(self.epsilon_min, self.epsilon_start * self.epsilon_decay)
+        print(f"epsilon = {self.epsilon_start} Episode {episode} Score: {score_val} | Loss: {batch_loss:.3f}")
     
 
 if __name__ == '__main__':

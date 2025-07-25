@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 class SpaceInvaderGame:
-    def __init__(self, headless = True):
+    def __init__(self, headless = False):
         self.headless = headless
         pygame.init()
         
@@ -35,7 +35,7 @@ class SpaceInvaderGame:
         self.bullet_state = 'ready'
 
         # Invaders
-        self.num_invaders = 1
+        self.num_invaders = 3
         if not self.headless:
           self.invader_img = [pygame.image.load('invader64.png') for _ in range(self.num_invaders)]
         self.invaderX = [random.randint(0, 736) for _ in range(self.num_invaders)]
@@ -99,7 +99,7 @@ class SpaceInvaderGame:
         self.__init__()
         return self.get_state()
 
-    def step(self, action, render = False):
+    def step(self, action, render = True):
         prev_score = self.score_val
         if render:
             delta_time = self.clock.tick(60) / 1000

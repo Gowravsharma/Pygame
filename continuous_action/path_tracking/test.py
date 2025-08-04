@@ -94,9 +94,21 @@ def draw_road(path, width):
         py = dx * width / 2
         left.append((x1 + px, y1 + py))
         right.append((x1 - px, y1 - py))
-    right.reverse()
-    road_poly = left + right
+    
+    # road surface
+    right_reversed = list(reversed(right))
+    #right.reverse()
+    road_poly = left + right_reversed
     pygame.draw.polygon(screen, gray, road_poly)
+
+    # draw re line
+    red = (150, 0,200)
+    border_width = 3 
+
+    if len(left) > 1:
+        pygame.draw.lines(screen, red, False, left, border_width)
+        pygame.draw.lines(screen, red, False, right, border_width)
+
 
 # Load car
 car_img = pygame.image.load(r'assets/car_top32.png')

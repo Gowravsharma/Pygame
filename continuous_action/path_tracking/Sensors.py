@@ -3,12 +3,12 @@ import pygame
 import numpy as np
 
 class LiDAR:
-  def __init__(self, Range, uncertainity, screen):
-    self.ray_angles = [-60, -30, -15, 0, 15, 30, 60]
+  def __init__(self, Range, uncertainity, screen, position):
+    self.ray_angles = [-80,-60, -45 ,-30, -15, 0, 15, 30, 45 , 60, 80]
     self.Range = Range
     self.W, self.H = screen.get_size()
     self.sigma = np.array([uncertainity[0], uncertainity[1]])
-    self.position = (0,0)
+    self.position = position
     self.senseobstacle = []
     self.screen = screen
   
@@ -33,6 +33,7 @@ class LiDAR:
     x1, y1 = self.position[0], self.position[1]
     new_ray_angles = [math.radians(x + car_angle) for x in self.ray_angles]
     for angle in new_ray_angles:
+      hit = False
       x2, y2 = (x1 + self.Range * math.cos(angle), y1 - self.Range * math.sin(angle))
       for i in range(0,100):
         u = i/100
@@ -40,9 +41,10 @@ class LiDAR:
         y = int(y2* u + y1 * (1-u))
         if 0<x<self.W and 0<y<self.H:
           color = self.screen.get_at((int(x), int(y)))
-          if (color[0],color[1], color[2]) == (200,0,200):
+          if (color[0],color[1], color[2]) == (150,0,200):
             distance = self.distance((x,y))
             distance, noisy_angles = self.uncertainity_add(distance, angle, self.sigma)
+            distance /= self.Range
             results.append((distance, noisy_angles))
             hit = True
             break
